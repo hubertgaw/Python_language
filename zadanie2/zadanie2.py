@@ -50,15 +50,16 @@ def sheeps_move(sheeps_list):
     directions = ["N", "S", "E", "W"]  # tablica odpowiadająca za kierunki
     # pętla, w której losujemy kierunek dla każdej owcy w liście przed każdą rundą:
     for sheep in sheeps_list:
-        sheep.direction = random.choice(directions)
-        if sheep.direction == 'N':
-            sheep.y = sheep.y + sheep_move_dist
-        elif sheep.direction == 'S':
-            sheep.y = sheep.y - sheep_move_dist
-        elif sheep.direction == 'E':
-            sheep.x = sheep.x + sheep_move_dist
-        elif sheep.direction == 'W':
-            sheep.x = sheep.x - sheep_move_dist
+        if sheep.status == 'alive':
+            sheep.direction = random.choice(directions)
+            if sheep.direction == 'N':
+                sheep.y = sheep.y + sheep_move_dist
+            elif sheep.direction == 'S':
+                sheep.y = sheep.y - sheep_move_dist
+            elif sheep.direction == 'E':
+                sheep.x = sheep.x + sheep_move_dist
+            elif sheep.direction == 'W':
+                sheep.x = sheep.x - sheep_move_dist
     for index, sheep in enumerate(sheeps_list):  # dzięki enumerate dostajemy indeks owcy w tablicy
         print("Owca nr.", index, "x:", sheep.x, "y:", sheep.y, "direction:", sheep.direction, "status:",
               sheep.status)
@@ -67,7 +68,8 @@ def sheeps_move(sheeps_list):
 
 # funkcja majaca na celu policzenie odleglosci pomiedzy wilkiem a żyjacymi owcami i wskazanie najblizszej:
 def find_nearest_distance(sheeps_list):
-    distances = {}  # słownik, w którym klucze toindeksy owiec, a wartosci to odleglosci pomiedzy owca(zyjaca), a wilkiem
+    distances = {}  # słownik, w którym klucze to indeksy owiec, a wartosci to odleglosci pomiedzy owca(zyjaca),
+    # a wilkiem
     for sheep in sheeps_list:
         if sheep.status == 'alive':
             distances[sheep.identify_number] = math.sqrt((Wolf.x - sheep.x) ** 2 + (Wolf.y - sheep.y) ** 2)
@@ -82,6 +84,11 @@ def wolf_move(index, nearest_distance, sheeps_list):
         wolf.x = sheeps_list[index].x
         wolf.y = sheeps_list[index].y
         sheeps_list[index].status = 'dead'
+    else:
+        wolf.x = wolf.x + (wolf_move_dist * (sheeps_list[index].x - wolf.x) / nearest_distance)  # nowe położenie
+        # wilka obliczone ze wzoru: x + dystans_ataku_wilka * (xOwcy - xWilka) / dystans_miedzy_wilkiem_i_owcą
+        wolf.y = wolf.y + (wolf_move_dist * (sheeps_list[index].y - wolf.y) / nearest_distance)  # analogicznie jw.
+    print("WOLF: x", wolf.x, "y:", wolf.y)
 
 
 def main():
@@ -90,8 +97,8 @@ def main():
         print("--------------------RUNDA:", i, "--------------------")
         sheeps_list = sheeps_move(start_sheeps)  # lista owiec po przemieszczeniu się
         index_of_sheep_with_nearest_distance, nearest_distance = find_nearest_distance(
-            sheeps_list)  # odleglosc pomiedzy wilkiem a
-        # najblizsza z owiec (tak wiem, tworcza nazwa)
+            sheeps_list)  # odleglosc pomiedzy wilkiem a najblizsza z owiec (tak wiem, tworcza nazwa)
+        print("nearest distance:", nearest_distance, "index:", index_of_sheep_with_nearest_distance)
         wolf_move(index_of_sheep_with_nearest_distance, nearest_distance, sheeps_list)
 
 
