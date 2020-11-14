@@ -28,7 +28,7 @@ class Wolf:
     y = 0.0
 
 
-wolf = Wolf()  # globalna zmienna wilk (nie wiem czy to poprawna konwencja)
+# wolf = Wolf()  # globalna zmienna wilk (nie wiem czy to poprawna konwencja)
 
 
 # metoda inicjalizujace owce ze wstepnymi wartosciami:
@@ -38,10 +38,10 @@ def sheeps_init():
     for i in range(sheeps_number):
         sheeps_list.append(Sheep(i, random.uniform(-init_pos_limit, init_pos_limit),
                                  random.uniform(-init_pos_limit, init_pos_limit)))
-
-    for index, sheep in enumerate(sheeps_list):  # dzięki enumerate dostajemy indeks owcy w tablicy
-        print("START Owca nr.", sheep.identify_number, "x:", sheep.x, "y:", sheep.y, "direction:", sheep.direction,
-              "status:", sheep.status)
+    # # wyswietlenie owiec startowych
+    # for sheep in sheeps_list:  # dzięki enumerate dostajemy indeks owcy w tablicy
+    #     print("START Owca nr.", sheep.identify_number, "x:", sheep.x, "y:", sheep.y, "direction:", sheep.direction,
+    #           "status:", sheep.status)
     return sheeps_list  # zwracamy listę owiec
 
 
@@ -60,46 +60,76 @@ def sheeps_move(sheeps_list):
                 sheep.x = sheep.x + sheep_move_dist
             elif sheep.direction == 'W':
                 sheep.x = sheep.x - sheep_move_dist
-    for index, sheep in enumerate(sheeps_list):  # dzięki enumerate dostajemy indeks owcy w tablicy
-        print("Owca nr.", index, "x:", sheep.x, "y:", sheep.y, "direction:", sheep.direction, "status:",
-              sheep.status)
-    return sheeps_list
+    # # wyswietlenie owiec:
+    # for index, sheep in enumerate(sheeps_list):  # dzięki enumerate dostajemy indeks owcy w tablicy
+    #     print("Owca nr.", index, "x:", sheep.x, "y:", sheep.y, "direction:", sheep.direction, "status:",
+    #           sheep.status)
+    return sheeps_list  # chyba nie musimy w sumie zwracac sheeps_list
 
 
 # funkcja majaca na celu policzenie odleglosci pomiedzy wilkiem a żyjacymi owcami i wskazanie najblizszej:
-def find_nearest_distance(sheeps_list):
+def find_nearest_distance(sheeps_list, wolf):
     distances = {}  # słownik, w którym klucze to indeksy owiec, a wartosci to odleglosci pomiedzy owca(zyjaca),
     # a wilkiem
     for sheep in sheeps_list:
-        if sheep.status == 'alive':
-            distances[sheep.identify_number] = math.sqrt((Wolf.x - sheep.x) ** 2 + (Wolf.y - sheep.y) ** 2)
+        if sheep.status == 'alive':  # oczywiscie zwracamy tylko odleglość pomiędzy wilkiem a owcami żyjącymi
+            # wstawiamy dystanse wraz z odpowiadającymi im indeksami owiec do słownika:
+            distances[sheep.identify_number] = math.sqrt((wolf.x - sheep.x) ** 2 + (wolf.y - sheep.y) ** 2)
     min_distance_index = min(distances.keys(), key=(lambda k: distances[k]))  # min_distance_index jest to indeks
     # owcy, do której wilkowi najbliżej
     return min_distance_index, distances[
         min_distance_index]  # zwracamy indeks najblizszej owcy oraz tą najbliżsszą odległość
 
 
-def wolf_move(index, nearest_distance, sheeps_list):
+# funkcja odpowiedzialna za ruch wilka
+def wolf_move(index, nearest_distance, sheeps_list, wolf):
+    # Jeśli owca w zasięgu to wilk ją zjada (przesuwa się na jej mmiejsce, a status owcy zmienia się na 'dead':
     if nearest_distance < wolf_move_dist:
         wolf.x = sheeps_list[index].x
         wolf.y = sheeps_list[index].y
         sheeps_list[index].status = 'dead'
+        print("Pozarto owce nr.", sheeps_list[index].identify_number)  # informacja ktora owce pozarto
     else:
         wolf.x = wolf.x + (wolf_move_dist * (sheeps_list[index].x - wolf.x) / nearest_distance)  # nowe położenie
         # wilka obliczone ze wzoru: x + dystans_ataku_wilka * (xOwcy - xWilka) / dystans_miedzy_wilkiem_i_owcą
         wolf.y = wolf.y + (wolf_move_dist * (sheeps_list[index].y - wolf.y) / nearest_distance)  # analogicznie jw.
-    print("WOLF: x", wolf.x, "y:", wolf.y)
+    print("WILK: x:", format(wolf.x, '.3f'), "y:", format(wolf.y, '.3f'))  # wyswietlenie info o wilku
+
+
+# dunkcja sprawdzająca czy wszystkie owce są martwe:
+def check_if_all_sheeps_are_dead(sheeps_list):
+    for sheep in sheeps_list:
+        if sheep.status == 'alive':  # jeśli jest jakakolwiek żywa zwracamy True
+            return False
+    return True
+
+
+# funkcja do liczenia żywych owiec
+def count_alive_sheeps(sheeps_list):
+    alive_sheeps_list = []  # lista żywych owiec
+    for sheep in sheeps_list:
+        if sheep.status == 'alive':
+            alive_sheeps_list.append(sheep)
+    return len(alive_sheeps_list)
 
 
 def main():
-    start_sheeps = sheeps_init()
+    start_sheeps = sheeps_init()  # owce ze wstępnie zainicjalizowanymi atrybutami
+    wolf = Wolf()  # zmienna reprezentujaca wilka (domyslnie znajduje sie w (0,0))
+    # petla, w której jedna iteracja odpowiada jednej rundzie:
     for i in range(rounds_number):
-        print("--------------------RUNDA:", i, "--------------------")
+        print("--------------------RUNDA:", i + 1, "--------------------")
         sheeps_list = sheeps_move(start_sheeps)  # lista owiec po przemieszczeniu się
         index_of_sheep_with_nearest_distance, nearest_distance = find_nearest_distance(
-            sheeps_list)  # odleglosc pomiedzy wilkiem a najblizsza z owiec (tak wiem, tworcza nazwa)
-        print("nearest distance:", nearest_distance, "index:", index_of_sheep_with_nearest_distance)
-        wolf_move(index_of_sheep_with_nearest_distance, nearest_distance, sheeps_list)
+            sheeps_list, wolf)  # indeks owcy, do której wilk ma najbliżej i odleglosc pomiedzy wilkiem a najblizsza
+        # z owiec
+        # print("nearest distance:", nearest_distance, "index:", index_of_sheep_with_nearest_distance)
+        wolf_move(index_of_sheep_with_nearest_distance, nearest_distance, sheeps_list, wolf)  # ruch wilka
+        if check_if_all_sheeps_are_dead(sheeps_list):  # sprawdzamy czy wszystkie owce są martwe
+            print("All sheeps are dead after round", i + 1)
+            break
+        else:
+            print("Zywych owiec:", count_alive_sheeps(sheeps_list))  # liczymy zywe owce
 
 
 if __name__ == "__main__":
