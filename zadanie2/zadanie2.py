@@ -112,6 +112,20 @@ def count_alive_sheeps(sheeps_list):
             alive_sheeps_list.append(sheep)
     return len(alive_sheeps_list)
 
+# funkcja, która sporządzi listę gotową do zapisania w pliku pos.json
+def prepare_list_to_export_to_json(round_no, wolf_pos_x, wolf_pos_y, sheeps_list):
+    list_of_dictionaries = [] # lista, która bedzie przechowywała słowniki
+    sheeps_pos_list = [] # lista zawierajaca pary liczb - pozycje owiec dla owcy żywych lub null dla pożartych
+    for sheep in sheeps_list:
+        sheeps_pos_list.append(sheep.x + ", " + sheep.y)
+    list_of_dictionaries.append({
+        "round_no": round_no,
+        "wolf pos": wolf_pos_x + ", " + wolf_pos_y
+        "sheep_pos": sheeps_pos_list
+    })
+
+def export_to_json(file_name,sheeps_list):
+    return
 
 def main():
     start_sheeps = sheeps_init()  # owce ze wstępnie zainicjalizowanymi atrybutami
@@ -130,7 +144,7 @@ def main():
             break
         else:
             print("Zywych owiec:", count_alive_sheeps(sheeps_list))  # liczymy zywe owce
-
+        prepare_list_to_export_to_json(i+1, wolf.x, wolf.y, sheeps_list)
 
 if __name__ == "__main__":
     main()
