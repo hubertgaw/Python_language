@@ -115,11 +115,14 @@ def count_alive_sheeps(sheeps_list):
 
 
 # funkcja, która sporządzi listę gotową do zapisania w pliku pos.json
-def prepare_list_to_export_to_json(round_no, wolf_pos_x, wolf_pos_y, sheeps_list):
-    list_of_dictionaries = []  # lista, która bedzie przechowywała słowniki
+def prepare_list_to_export_to_json(round_no, wolf_pos_x, wolf_pos_y, sheeps_list, list_of_dictionaries):
+    # list_of_dicitionaries - czyli lista, która bedzie przhcowyywała słowniki (ta, ktora wyeksportujemy do json
     sheeps_pos_list = []  # lista zawierajaca pary liczb - pozycje owiec dla owcy żywych lub null dla pożartych
     for sheep in sheeps_list:
-        sheeps_pos_list.append(str(sheep.x) + ", " + str(sheep.y))
+        if sheep.status == 'alive':  # jesli owca żywa to dodajemy jej wspołrzedne
+            sheeps_pos_list.append(str(sheep.x) + ", " + str(sheep.y))
+        else:
+            sheeps_pos_list.append(None)  # jeśli zjedzona to None
     list_of_dictionaries.append({
         "round_no": round_no,
         "wolf pos": str(wolf_pos_x) + ", " + str(wolf_pos_y),
@@ -128,15 +131,21 @@ def prepare_list_to_export_to_json(round_no, wolf_pos_x, wolf_pos_y, sheeps_list
     return list_of_dictionaries
 
 
+# funkcja, ktora eksportuje naszą liste do jsona
 def export_to_json(file_name, sheeps_list):
-    with open(file_name, 'w') as fp:
-        json.dump(sheeps_list, fp, indent=4)
+    # działanie na pliku tak jak w cwiczeniu wprowadzajacym:
+    try:
+        with open(file_name, "w") as fp:
+            json.dump(sheeps_list, fp, indent=4)  # indent oznacza wciecia (aby wyswietlalo sie w pliku w ładny sposób)
+    except IOError:
+        print("Error occured!")
 
 
 def main():
     start_sheeps = sheeps_init()  # owce ze wstępnie zainicjalizowanymi atrybutami
     wolf = Wolf()  # zmienna reprezentujaca wilka (domyslnie znajduje sie w (0,0))
     # petla, w której jedna iteracja odpowiada jednej rundzie:
+    list_for_export_to_json = []  # lista, która wyeksportujemy do pliku pos.json
     for i in range(rounds_number):
         print("--------------------RUNDA:", i + 1, "--------------------")
         sheeps_list = sheeps_move(start_sheeps)  # lista owiec po przemieszczeniu się
@@ -150,8 +159,8 @@ def main():
             break
         else:
             print("Zywych owiec:", count_alive_sheeps(sheeps_list))  # liczymy zywe owce
-        list_to_export_to_json = prepare_list_to_export_to_json(i + 1, wolf.x, wolf.y, sheeps_list)
-    export_to_json('pos.json', list_to_export_to_json)
+        prepare_list_to_export_to_json(i + 1, wolf.x, wolf.y, sheeps_list, list_for_export_to_json)
+    export_to_json('pos.json', list_for_export_to_json)
 
 
 if __name__ == "__main__":
