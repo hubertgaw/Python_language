@@ -1,6 +1,7 @@
 import random
 import math
 import json
+import csv
 
 rounds_number = 50
 sheeps_number = 15
@@ -9,19 +10,23 @@ sheep_move_dist = 0.5
 wolf_move_dist = 1.0
 
 
+# Co do zastosowanej notacji przy wypisywaniu i przy eksportowaniu do plików - jesli owca zostanie zjedzona w danej
+# rundzie, nie jest ona wypisywana, np w rundzie 23 wilk zjada owce nr 2 - czyli wypisujemy pozycje owcy w rundzie
+# 22, potem w rundzie 23 przesuwa się ona i wilk ją zjada - ale jej pozycji w tej rundzie nie wypisujemy, jako,
+# że na koniec rundy jest martwa, a założyłem ze wypisywane informacje odnoszą się do momentu zakończenia rundy.
+# Jesli stwierdzimy inaczej moge to zmienic
+
 class Sheep:
-    # atrybuty klasowe, czyli wspoldzielona przez wszystkie obiekty klasy:
 
     # atrybuty instancyjne, czyli związane z okreslonym obiektem:
-    def __init__(self, identify_number, x, y, direction='N'):
-        self.identify_number = identify_number
-        self.x = random.uniform(-init_pos_limit, init_pos_limit)
+    def __init__(self, identify_number, direction='N'):
+        self.identify_number = identify_number  # identify_number to numer owcy w kolejnosci
+        self.x = random.uniform(-init_pos_limit, init_pos_limit)  # losujemy x i y
         self.y = random.uniform(-init_pos_limit, init_pos_limit)
-        self.direction = direction
-        self.status = 'alive'
+        self.direction = direction  # ustawiamy wstępny domyślny kierunek na N (mozna go zmienic przekazujac inny w
+        # konstruktorze)
+        self.status = 'alive'  # ustawiamy wstepny status na alive (jego w konnstruktorze nie zmienimy)
 
-
-# Byc moze w owcy wystarczą atrybuty x i y, jeszcze to przemysle
 
 class Wolf:
     # atrybuty klasowe (z góry mamy powiedziane, że będzie jeden wilk zatem będa tylko atrybuty klasowe)
@@ -29,16 +34,12 @@ class Wolf:
     y = 0.0
 
 
-# wolf = Wolf()  # globalna zmienna wilk (nie wiem czy to poprawna konwencja)
-
-
 # metoda inicjalizujace owce ze wstepnymi wartosciami:
 def sheeps_init():
     sheeps_list = []  # lista owiec, które będdą brały udział w symulacji
     # petla, która wstawia owce do listy, ze wstepnie zainicjalizowanymi losowymi wartosicam
     for i in range(sheeps_number):
-        sheeps_list.append(Sheep(i, random.uniform(-init_pos_limit, init_pos_limit),
-                                 random.uniform(-init_pos_limit, init_pos_limit)))
+        sheeps_list.append(Sheep(i))
     # # wyswietlenie owiec startowych
     # for sheep in sheeps_list:  # dzięki enumerate dostajemy indeks owcy w tablicy
     #     print("START Owca nr.", sheep.identify_number, "x:", sheep.x, "y:", sheep.y, "direction:", sheep.direction,
@@ -52,7 +53,8 @@ def sheeps_move(sheeps_list):
     # pętla, w której losujemy kierunek dla każdej owcy w liście przed każdą rundą:
     for sheep in sheeps_list:
         if sheep.status == 'alive':
-            sheep.direction = random.choice(directions)
+            sheep.direction = random.choice(directions)  # tutaj odbywa się losowanie kierunku
+            # po wylosowaniu kierunku "poruszamy" owce
             if sheep.direction == 'N':
                 sheep.y = sheep.y + sheep_move_dist
             elif sheep.direction == 'S':
@@ -97,12 +99,12 @@ def wolf_move(index, nearest_distance, sheeps_list, wolf):
     print("WILK: x:", format(wolf.x, '.3f'), "y:", format(wolf.y, '.3f'))  # wyswietlenie info o wilku
 
 
-# dunkcja sprawdzająca czy wszystkie owce są martwe:
-def check_if_all_sheeps_are_dead(sheeps_list):
-    for sheep in sheeps_list:
-        if sheep.status == 'alive':  # jeśli jest jakakolwiek żywa zwracamy True
-            return False
-    return True
+# funkcja sprawdzająca czy wszystkie owce są martwe: ostatecznie nie potrzebna ale na razie nie usuwałem
+# def check_if_all_sheeps_are_dead(sheeps_list):
+#     for sheep in sheeps_list:
+#         if sheep.status == 'alive':  # jeśli jest jakakolwiek żywa zwracamy True
+#             return False
+#     return True
 
 
 # funkcja do liczenia żywych owiec
@@ -141,7 +143,26 @@ def export_to_json(file_name, sheeps_list):
         print("Error occured!")
 
 
-def main():
+# funkcja eksportująca do csv
+def export_to_csv(file_name, round_no, sheeps_no):
+    if round_no == 1:  # jeśli pierwsza runda to nadpisujemy plik (mode='w')
+        try:
+            with open(file_name, mode='w') as csv_file:
+                writer = csv.writer(csv_file, delimiter=',')
+                writer.writerow([round_no, sheeps_no])
+        except IOError:
+            print("Error occured!")
+    else:  # kazda nastepna to dodajemy do istniejącego pliku (mode='a')
+        try:
+            with open(file_name, mode='a') as csv_file:
+                writer = csv.writer(csv_file, delimiter=',')  # delimiter - za pomocą czego oddzielamy wartosci
+                writer.writerow([round_no, sheeps_no])
+        except IOError:
+            print("Error occured!")
+
+
+# funkcja odpowiadająca za "właściwa symulacje":
+def simulation():
     start_sheeps = sheeps_init()  # owce ze wstępnie zainicjalizowanymi atrybutami
     wolf = Wolf()  # zmienna reprezentujaca wilka (domyslnie znajduje sie w (0,0))
     # petla, w której jedna iteracja odpowiada jednej rundzie:
@@ -154,13 +175,24 @@ def main():
         # z owiec
         # print("nearest distance:", nearest_distance, "index:", index_of_sheep_with_nearest_distance)
         wolf_move(index_of_sheep_with_nearest_distance, nearest_distance, sheeps_list, wolf)  # ruch wilka
-        if check_if_all_sheeps_are_dead(sheeps_list):  # sprawdzamy czy wszystkie owce są martwe
+        alive = count_alive_sheeps(sheeps_list)
+        print("Zywych owiec:", alive)  # liczymy zywe owce
+        export_to_csv('alive.csv', i + 1, alive)
+        prepare_list_to_export_to_json(i + 1, wolf.x, wolf.y, sheeps_list, list_for_export_to_json)
+        if alive == 0:
             print("All sheeps are dead after round", i + 1)
             break
-        else:
-            print("Zywych owiec:", count_alive_sheeps(sheeps_list))  # liczymy zywe owce
-        prepare_list_to_export_to_json(i + 1, wolf.x, wolf.y, sheeps_list, list_for_export_to_json)
+        # if check_if_all_sheeps_are_dead(sheeps_list):  # sprawdzamy czy wszystkie owce są martwe
+        #     print("All sheeps are dead after round", i + 1)
+        #     break
+        # else:
+        #     alive = count_alive_sheeps(sheeps_list)
+        #     print("Zywych owiec:", alive)  # liczymy zywe owce
     export_to_json('pos.json', list_for_export_to_json)
+
+
+def main():
+    simulation()
 
 
 if __name__ == "__main__":
