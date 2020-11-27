@@ -44,7 +44,7 @@ def sheeps_init(sheeps_number, init_pos_limit):
     # for sheep in sheeps_list:  # dzięki enumerate dostajemy indeks owcy w tablicy
     #     print("START Owca nr.", sheep.identify_number, "x:", sheep.x, "y:", sheep.y, "direction:", sheep.direction,
     #           "status:", sheep.status)
-    # logging.debug("sheeps_init(" + str(sheeps_number) + str(init_pos_limit) + ") called, returned " + str(sheeps_list))
+    logging.debug("sheeps_init(" + str(sheeps_number) + str(init_pos_limit) + ") called, returned " + str(sheeps_list))
     return sheeps_list  # zwracamy listę owiec
 
 
@@ -121,6 +121,9 @@ def count_alive_sheeps(sheeps_list):
 
 # funkcja, która sporządzi listę gotową do zapisania w pliku pos.json
 def prepare_list_to_export_to_json(round_no, wolf_pos_x, wolf_pos_y, sheeps_list, list_of_dictionaries):
+    logging.debug(
+        "prepare_list_to_export_to_json(" + str(round_no) + str(wolf_pos_x) + str(wolf_pos_y) + str(sheeps_list) + str(
+            list_of_dictionaries) + ") called")
     # list_of_dicitionaries - czyli lista, która bedzie przchowyywała słowniki (ta, ktora wyeksportujemy do json)
     sheeps_pos_list = []  # lista zawierajaca pary liczb - pozycje owiec dla owcy żywych lub null dla pożartych
     for sheep in sheeps_list:
@@ -133,10 +136,6 @@ def prepare_list_to_export_to_json(round_no, wolf_pos_x, wolf_pos_y, sheeps_list
         "wolf pos": str(wolf_pos_x) + ", " + str(wolf_pos_y),
         "sheep_pos": sheeps_pos_list
     })
-    logging.debug(
-        "prepare_list_to_export_to_json(" + str(round_no) + str(wolf_pos_x) + str(wolf_pos_y) + str(sheeps_list) + str(
-            list_of_dictionaries) +
-        ") called, returned " + str(list_of_dictionaries))
     # return list_of_dictionaries
 
 
@@ -144,43 +143,40 @@ def prepare_list_to_export_to_json(round_no, wolf_pos_x, wolf_pos_y, sheeps_list
 def export_to_json(file_name, sheeps_list, directory):
     logging.debug("export_to_json(" + str(file_name) + str(sheeps_list) + ") called")
     # działanie na pliku tak jak w cwiczeniu wprowadzajacym:
-    try:
-        f = open(file_name, "w")
+    # try:
+    with open(file_name, 'w') as f:
         f.write(
             json.dumps(sheeps_list, indent=4))  # indent oznacza wciecia (aby wyswietlalo sie w pliku w ładny sposób)
-        f.close()
-    except IOError:
-        print("Error occured!")
+
+    # except IOError:
+    #     print("Error occured!")
 
 
 # funkcja eksportująca do csv
 def export_to_csv(file_name, round_no, sheeps_no, directory):
     logging.debug("export_to_csv(" + str(file_name) + str(round_no) + str(sheeps_no) + ") called")
     if round_no == 1:  # jeśli pierwsza runda to nadpisujemy plik (mode='w')
-        try:
-            create_directory(directory)
-            # if directory:  # jeśli istnieje katalog został podany
-            #     direct = os.getcwd()  # pobranie bieżącej ścieżki
-            #     path = direct + '\\' + directory
-            #     direct_path = os.path.dirname(path)
-            #     if not os.path.exists(direct_path):  # jeśli katalog nie istnieje
-            #         print("Create a directory")
-            #         os.mkdir(directory)  # to go tworzymy
-            #     os.chdir(directory)
-            csv_file = open(file_name, "w")
+        # create_directory(directory)
+        # if directory:  # jeśli istnieje katalog został podany
+        #     direct = os.getcwd()  # pobranie bieżącej ścieżki
+        #     path = direct + '\\' + directory
+        #     direct_path = os.path.dirname(path)
+        #     if not os.path.exists(direct_path):  # jeśli katalog nie istnieje
+        #         print("Create a directory")
+        #         os.mkdir(directory)  # to go tworzymy
+        #     os.chdir(directory)
+        with open(file_name, 'w', newline='') as csv_file:
             writer = csv.writer(csv_file, delimiter=',')
             writer.writerow([round_no, sheeps_no])
-            csv_file.close()
-
-        except IOError:
-            print("Error occured!")
+    # except IOError:
+    #     print("Error with creating directory occured!")
     else:  # kazda nastepna to dodajemy do istniejącego pliku (mode='a')
-        try:
-            with open(file_name, mode='a') as csv_file:
-                writer = csv.writer(csv_file, delimiter=',')  # delimiter - za pomocą czego oddzielamy wartosci
-                writer.writerow([round_no, sheeps_no])
-        except IOError:
-            print("Error occured!")
+        # try:
+        with open(file_name, mode='a', newline='') as csv_file:
+            writer = csv.writer(csv_file, delimiter=',')  # delimiter - za pomocą czego oddzielamy wartosci
+            writer.writerow([round_no, sheeps_no])
+        # except IOError:
+        #     print("Error occured!")
 
 
 # wczytanie wartości z pliku konfiguracyjnego gdy jest argument wywołania -c/--config
@@ -194,7 +190,7 @@ def parse_config(file):
     if float(init) < 0 or float(sheeps) < 0 or float(wolf) < 0:  # sprawdzanie warunków dodatnich liczb z pliku
         logging.error("Not positive number passed as argument")
         raise ValueError("Not positive number")
-    logging.debug("parse_config(", file, ") called, returned: ", float(init), float(sheeps), float(wolf))
+    # logging.debug("parse_config(", file, ") called, returned: ", float(init), float(sheeps), float(wolf))
     return float(init), float(sheeps), float(wolf)
 
 
@@ -239,33 +235,39 @@ def simulation(rounds_number, sheeps_number, init_pos_limit, sheep_move_dist, wo
         # else:
         #     alive = count_alive_sheeps(sheeps_list)
         #     print("Zywych owiec:", alive)                                             # liczymy zywe owce
+        if wait:
+            input("\nPress a key to continue...")
     export_to_json('pos.json', list_for_export_to_json, directory)
-    if wait:
-        input("\nPress a key to continue...")
 
 
 # funkcja do tworzenia katalogow na pliki powstale w ramach symulacji
 def create_directory(directory):
+    # tu nie ma logging.debug bo porzy wywolywaniu tej funkcji jeszcze nie mamy zrobionego logging.basicConfig,
+    # a jak tu zostawimy debuga to sie wgl plik nie tworzy.
+    # logging.debug(
+    #     "create_directory(" + str(directory) + ") called")
     try:
-        if directory:  # jeśli istnieje katalog został podany
-            direct = os.getcwd()  # pobranie bieżącej ścieżki
-            path = direct + '\\' + directory
-            direct_path = os.path.dirname(path)
-            if not os.path.exists(direct_path):  # jeśli katalog nie istnieje
-                print("Create a directory")
-                os.mkdir(directory)  # to go tworzymy
-            os.chdir(directory)
+        # if directory:  # jeśli istnieje katalog został podany
+        direct = os.getcwd()  # pobranie bieżącej ścieżki
+        path = direct + '\\' + directory
+        direct_path = os.path.dirname(path)
+        if not os.path.exists(direct_path):  # jeśli katalog nie istnieje
+            print("Create a directory")
+            os.mkdir(directory)  # to go tworzymy
+        os.chdir(directory)  # katalog biezacy na nowo stworzony
     except IOError:
-        print("Error occured!")
+        print("Error with directory occured!")
 
 
 def logging_setup(level, directory):
-    direct = os.getcwd()  # pobranie bieżącej ścieżki
-    create_directory(directory)
+    logging.debug(
+        "logging_setup(" + str(level) + str(directory) + ") called")
+    # direct = os.getcwd()  # pobranie bieżącej ścieżki
+    # create_directory(directory)
     logging.basicConfig(level=level,
                         filename='chase.log',
                         filemode='w')
-    os.chdir(direct)
+    # os.chdir(direct)
 
 
 def main():
@@ -283,8 +285,8 @@ def main():
     # dest określa nazwę argumentu, dzięki której możemy się do niego odwołać w kodzie, metavar określa
     # nazwę oczekiwanej wartości po wywołaniu przetwarzanego argumentu (tutaj -c/--config) w linii poleceń
     parser.add_argument('-c', '--config', help='set config file', action='store', dest='config', metavar='FILE')
-    parser.add_argument('-d', '--dir', help='choose place to save files pos.json and alive.csv', action='store',
-                        dest='directory', metavar='DIR')
+    parser.add_argument('-d', '--dir', help='choose place to save files pos.json, alive.csv and chase.log (if -c '
+                                            'option given)', action='store', dest='directory', metavar='DIR')
     parser.add_argument('-l', '--log', help='defines the level of events to be recorded in the log',
                         action='store', dest='log_level', metavar="LEVEL", )
     # type - określa typ wprowadzonej wartości, my potrzebujemy dodatnie, co jest sprawdzane przez odpowiednią funkcję
@@ -302,6 +304,7 @@ def main():
         init_pos_limit, sheep_move_dist, wolf_move_dist = parse_config(args.config)
     if args.directory:
         directory = args.directory
+        create_directory(directory)  # jak mamy podana directory z cmd to od razu ja tworzymy.
     if args.log_level:  # wszystkie if'y sprawdzają, czy wartość zmiennej LEVEL jest zgodna z oczekiwaną, jesli nie, to wywala błąd
         if args.log_level == "DEBUG":
             level = logging.DEBUG
@@ -315,9 +318,10 @@ def main():
             level = logging.CRITICAL
         else:
             raise ValueError("Invalid log level!")
-        logging_setup(level, directory)
-        # logging.basicConfig(level=level,
-        #                     filename='.\\log\\chase.log')                               # wykonuje podstawową konfigurację systemu logowania, z określonym poziomem i nazwą pliku
+        logging.basicConfig(level=level,
+                            # wykonuje podstawową konfigurację systemu logowania, z określonym poziomem i nazwą pliku
+                            filename='chase.log',
+                            filemode='w')
         # logging.warning("here we see warning")                                 # rejestruje komunikat z poziomem warning, który ma wyzszy level, wiec jesli wywolasz z interpreteta
         # -l DEBUG to można sprawdzić, że zapisuje też wyższe poziomy do pliku chase.log
     if args.rounds_number:
@@ -326,7 +330,8 @@ def main():
         sheeps_number = args.sheeps_number
     if args.waiting:
         wait = args.waiting
-
+    # level = logging.DEBUG
+    # logging_setup(level, directory)
     simulation(rounds_number, sheeps_number, init_pos_limit, sheep_move_dist, wolf_move_dist, wait, directory)
 
 
