@@ -37,14 +37,13 @@ class Wolf:
 def sheeps_init(sheeps_number, init_pos_limit):
     sheeps_list = []  # lista owiec, które będdą brały udział w symulacji
     # petla, która wstawia owce do listy, ze wstepnie zainicjalizowanymi losowymi wartosicam
+    logging.info("initialisation of sheep list, primary coordinates:")
     for i in range(sheeps_number):
         sheeps_list.append(
             Sheep(i, random.uniform(-init_pos_limit, init_pos_limit), random.uniform(-init_pos_limit, init_pos_limit)))
-    # # wyswietlenie owiec startowych
-    # for sheep in sheeps_list:  # dzięki enumerate dostajemy indeks owcy w tablicy
-    #     print("START Owca nr.", sheep.identify_number, "x:", sheep.x, "y:", sheep.y, "direction:", sheep.direction,
-    #           "status:", sheep.status)
+        logging.info("sheep nr " + str(sheeps_list[i].identify_number) + " with position (" + str(sheeps_list[i].x) + ", " + str(sheeps_list[i].y) + ")")
     logging.debug("sheeps_init(" + str(sheeps_number) + str(init_pos_limit) + ") called, returned " + str(sheeps_list))
+
     return sheeps_list  # zwracamy listę owiec
 
 
@@ -52,6 +51,7 @@ def sheeps_init(sheeps_number, init_pos_limit):
 def sheeps_move(sheeps_list, sheep_move_dist):
     directions = ["N", "S", "E", "W"]  # tablica odpowiadająca za kierunki
     # pętla, w której losujemy kierunek dla każdej owcy w liście przed każdą rundą:
+    logging.info("movement of sheeps:")
     for sheep in sheeps_list:
         if sheep.status == 'alive':
             sheep.direction = random.choice(directions)  # tutaj odbywa się losowanie kierunku
@@ -64,10 +64,7 @@ def sheeps_move(sheeps_list, sheep_move_dist):
                 sheep.x = sheep.x + sheep_move_dist
             elif sheep.direction == 'W':
                 sheep.x = sheep.x - sheep_move_dist
-    # # wyswietlenie owiec:
-    # for index, sheep in enumerate(sheeps_list):  # dzięki enumerate dostajemy indeks owcy w tablicy
-    #     print("Owca nr.", index, "x:", sheep.x, "y:", sheep.y, "direction:", sheep.direction, "status:",
-    #           sheep.status)
+        logging.info("sheep nr " + str(sheep.identify_number) + " with position (" + str(sheep.x) + ", " + str(sheep.y) + ")")
     logging.debug("sheeps_move(" + str(sheeps_list) + str(sheep_move_dist) + ") called, returned " + str(sheeps_list))
     return sheeps_list
 
@@ -92,6 +89,7 @@ def find_nearest_distance(sheeps_list, wolf):
 def wolf_move(index_of_sheep, nearest_distance, sheeps_list, wolf, wolf_move_dist, round_number, list_to_json):
     logging.debug("wolf_move(" + str(index_of_sheep) + str(nearest_distance) + str(sheeps_list) + wolf.__str__() + str(
         wolf_move_dist) + ") called")
+    logging.info("wolf movement from " + str(wolf.x) + ", " + str(wolf.y))
     # Jeśli owca w zasięgu to wilk ją zjada (przesuwa się na jej miejsce, a status owcy zmienia się na 'dead':
     if nearest_distance < wolf_move_dist:
         wolf.x = sheeps_list[index_of_sheep].x
@@ -99,6 +97,7 @@ def wolf_move(index_of_sheep, nearest_distance, sheeps_list, wolf, wolf_move_dis
         prepare_list_to_export_to_json(round_number, wolf.x, wolf.y, sheeps_list, list_to_json)
         sheeps_list[index_of_sheep].status = 'dead'
         print("Pozarto owce nr.", sheeps_list[index_of_sheep].identify_number)  # informacja ktora owce pozarto
+        logging.info("wolf ate a sheep with a number " + str(sheeps_list[index_of_sheep].identify_number))
     else:
         wolf.x = wolf.x + (
                 wolf_move_dist * (sheeps_list[index_of_sheep].x - wolf.x) / nearest_distance)  # nowe położenie
@@ -106,6 +105,7 @@ def wolf_move(index_of_sheep, nearest_distance, sheeps_list, wolf, wolf_move_dis
         wolf.y = wolf.y + (
                 wolf_move_dist * (sheeps_list[index_of_sheep].y - wolf.y) / nearest_distance)  # analogicznie jw.
         prepare_list_to_export_to_json(round_number, wolf.x, wolf.y, sheeps_list, list_to_json)
+    logging.info("wolf movement to " + str(wolf.x) + ", " + str(wolf.y))
     print("WILK: x:", format(wolf.x, '.3f'), "y:", format(wolf.y, '.3f'))  # wyswietlenie info o wilku
 
 
@@ -116,6 +116,7 @@ def count_alive_sheeps(sheeps_list):
         if sheep.status == 'alive':
             alive_sheeps_list.append(sheep)
     logging.debug("count_alive_sheeps(" + str(sheeps_list) + ") called, returned " + str(len(alive_sheeps_list)))
+    logging.info("alive sheeps number is " + str(len(alive_sheeps_list)))
     return len(alive_sheeps_list)
 
 
@@ -136,47 +137,28 @@ def prepare_list_to_export_to_json(round_no, wolf_pos_x, wolf_pos_y, sheeps_list
         "wolf pos": str(wolf_pos_x) + ", " + str(wolf_pos_y),
         "sheep_pos": sheeps_pos_list
     })
-    # return list_of_dictionaries
 
 
 # funkcja, ktora eksportuje naszą liste do jsona
 def export_to_json(file_name, sheeps_list, directory):
     logging.debug("export_to_json(" + str(file_name) + str(sheeps_list) + ") called")
     # działanie na pliku tak jak w cwiczeniu wprowadzajacym:
-    # try:
     with open(file_name, 'w') as f:
         f.write(
             json.dumps(sheeps_list, indent=4))  # indent oznacza wciecia (aby wyswietlalo sie w pliku w ładny sposób)
-
-    # except IOError:
-    #     print("Error occured!")
 
 
 # funkcja eksportująca do csv
 def export_to_csv(file_name, round_no, sheeps_no, directory):
     logging.debug("export_to_csv(" + str(file_name) + str(round_no) + str(sheeps_no) + ") called")
     if round_no == 1:  # jeśli pierwsza runda to nadpisujemy plik (mode='w')
-        # create_directory(directory)
-        # if directory:  # jeśli istnieje katalog został podany
-        #     direct = os.getcwd()  # pobranie bieżącej ścieżki
-        #     path = direct + '\\' + directory
-        #     direct_path = os.path.dirname(path)
-        #     if not os.path.exists(direct_path):  # jeśli katalog nie istnieje
-        #         print("Create a directory")
-        #         os.mkdir(directory)  # to go tworzymy
-        #     os.chdir(directory)
         with open(file_name, 'w', newline='') as csv_file:
             writer = csv.writer(csv_file, delimiter=',')
             writer.writerow([round_no, sheeps_no])
-    # except IOError:
-    #     print("Error with creating directory occured!")
     else:  # kazda nastepna to dodajemy do istniejącego pliku (mode='a')
-        # try:
         with open(file_name, mode='a', newline='') as csv_file:
             writer = csv.writer(csv_file, delimiter=',')  # delimiter - za pomocą czego oddzielamy wartosci
             writer.writerow([round_no, sheeps_no])
-        # except IOError:
-        #     print("Error occured!")
 
 
 # wczytanie wartości z pliku konfiguracyjnego gdy jest argument wywołania -c/--config
@@ -188,9 +170,9 @@ def parse_config(file):
     wolf = config.get('Movement', 'WolfMoveDist')
 
     if float(init) < 0 or float(sheeps) < 0 or float(wolf) < 0:  # sprawdzanie warunków dodatnich liczb z pliku
-        logging.error("Not positive number passed as argument")
+        logging.error("not positive number passed as argument")
         raise ValueError("Not positive number")
-    # logging.debug("parse_config(", file, ") called, returned: ", float(init), float(sheeps), float(wolf))
+    logging.debug("parse_config(", file, ") called, returned: ", float(init), float(sheeps), float(wolf))
     return float(init), float(sheeps), float(wolf)
 
 
@@ -198,6 +180,7 @@ def parse_config(file):
 def check_positive(value):
     ivalue = int(value)
     if ivalue <= 0:
+        logging.error("argument is not a positive number")
         raise argparse.ArgumentTypeError("%s is an invalid positive int value" % value)  # raise - wyrzucenie błędu
     logging.debug("check_positive(", value, ") called, returned,", ivalue)
     return ivalue
@@ -205,6 +188,7 @@ def check_positive(value):
 
 # funkcja odpowiadająca za "właściwa symulacje":
 def simulation(rounds_number, sheeps_number, init_pos_limit, sheep_move_dist, wolf_move_dist, wait, directory):
+    logging.info("start a simulation")
     logging.debug(
         "simulation(" + str(rounds_number) + str(sheeps_number) + str(init_pos_limit) + str(sheep_move_dist) +
         str(wolf_move_dist) + str(wait) + str(directory) + ") called")
@@ -219,22 +203,14 @@ def simulation(rounds_number, sheeps_number, init_pos_limit, sheep_move_dist, wo
         index_of_sheep_with_nearest_distance, nearest_distance = find_nearest_distance(
             sheeps_list,
             wolf)  # indeks owcy, do której wilk ma najbliżej i odleglosc pomiedzy wilkiem a najblizsza z owiec
-        # print("nearest distance:", nearest_distance, "index:", index_of_sheep_with_nearest_distance)
         wolf_move(index_of_sheep_with_nearest_distance, nearest_distance, sheeps_list, wolf, wolf_move_dist, i + 1,
                   list_for_export_to_json)  # ruch wilka
         alive = count_alive_sheeps(sheeps_list)
         print("Zywych owiec:", alive)  # liczymy zywe owce
         export_to_csv('alive.csv', i + 1, alive, directory)
-        # prepare_list_to_export_to_json(i + 1, wolf.x, wolf.y, sheeps_list, list_for_export_to_json,)
         if alive == 0:
             print("All sheeps are dead after round", i + 1)
             break
-        # if check_if_all_sheeps_are_dead(sheeps_list):  # sprawdzamy czy wszystkie owce są martwe
-        #     print("All sheeps are dead after round", i + 1)
-        #     break
-        # else:
-        #     alive = count_alive_sheeps(sheeps_list)
-        #     print("Zywych owiec:", alive)                                             # liczymy zywe owce
         if wait:
             input("\nPress a key to continue...")
     export_to_json('pos.json', list_for_export_to_json, directory)
@@ -243,31 +219,21 @@ def simulation(rounds_number, sheeps_number, init_pos_limit, sheep_move_dist, wo
 # funkcja do tworzenia katalogow na pliki powstale w ramach symulacji
 def create_directory(directory):
     # tu nie ma logging.debug bo porzy wywolywaniu tej funkcji jeszcze nie mamy zrobionego logging.basicConfig,
-    # a jak tu zostawimy debuga to sie wgl plik nie tworzy.
+    # a jak tu zostawimy debuga to sie wgl plik nie tworzy
     # logging.debug(
     #     "create_directory(" + str(directory) + ") called")
     try:
-        # if directory:  # jeśli istnieje katalog został podany
         direct = os.getcwd()  # pobranie bieżącej ścieżki
         path = direct + '\\' + directory
         direct_path = os.path.dirname(path)
         if not os.path.exists(direct_path):  # jeśli katalog nie istnieje
             print("Create a directory")
+            logging.info("create a new directory to sava files")
             os.mkdir(directory)  # to go tworzymy
         os.chdir(directory)  # katalog biezacy na nowo stworzony
     except IOError:
         print("Error with directory occured!")
-
-
-def logging_setup(level, directory):
-    logging.debug(
-        "logging_setup(" + str(level) + str(directory) + ") called")
-    # direct = os.getcwd()  # pobranie bieżącej ścieżki
-    # create_directory(directory)
-    logging.basicConfig(level=level,
-                        filename='chase.log',
-                        filemode='w')
-    # os.chdir(direct)
+        logging.error("error with directory occured")
 
 
 def main():
@@ -283,7 +249,7 @@ def main():
     # dodanie argumentu, pierwsze dwa parametry to nazwa skrócona i długa, później jest opis
     # wyświetlany w help'ie, action = store określa, że wartość ma zostać zapisana po ewentualnej konwersji
     # dest określa nazwę argumentu, dzięki której możemy się do niego odwołać w kodzie, metavar określa
-    # nazwę oczekiwanej wartości po wywołaniu przetwarzanego argumentu (tutaj -c/--config) w linii poleceń
+    # nazwę oczekiwanej wartości po wywołaniu przetwarzanego argumentu
     parser.add_argument('-c', '--config', help='set config file', action='store', dest='config', metavar='FILE')
     parser.add_argument('-d', '--dir', help='choose place to save files pos.json, alive.csv and chase.log (if -c '
                                             'option given)', action='store', dest='directory', metavar='DIR')
@@ -304,7 +270,7 @@ def main():
         init_pos_limit, sheep_move_dist, wolf_move_dist = parse_config(args.config)
     if args.directory:
         directory = args.directory
-        create_directory(directory)  # jak mamy podana directory z cmd to od razu ja tworzymy.
+        create_directory(directory)  # jak mamy podana directory z cmd to od razu ja tworzymy
     if args.log_level:  # wszystkie if'y sprawdzają, czy wartość zmiennej LEVEL jest zgodna z oczekiwaną, jesli nie, to wywala błąd
         if args.log_level == "DEBUG":
             level = logging.DEBUG
@@ -322,16 +288,13 @@ def main():
                             # wykonuje podstawową konfigurację systemu logowania, z określonym poziomem i nazwą pliku
                             filename='chase.log',
                             filemode='w')
-        # logging.warning("here we see warning")                                 # rejestruje komunikat z poziomem warning, który ma wyzszy level, wiec jesli wywolasz z interpreteta
-        # -l DEBUG to można sprawdzić, że zapisuje też wyższe poziomy do pliku chase.log
     if args.rounds_number:
         rounds_number = args.rounds_number
     if args.sheeps_number:
         sheeps_number = args.sheeps_number
     if args.waiting:
         wait = args.waiting
-    # level = logging.DEBUG
-    # logging_setup(level, directory)
+
     simulation(rounds_number, sheeps_number, init_pos_limit, sheep_move_dist, wolf_move_dist, wait, directory)
 
 
