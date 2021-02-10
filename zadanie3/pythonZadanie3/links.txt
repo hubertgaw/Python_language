@@ -1,0 +1,34 @@
+Colors Palette:
+1. http://www.science.smith.edu/dftwiki/index.php/File:TkInterColorCharts.png
+
+Color Picker:
+1. https://www.bing.com/videos/search?q=how+to+show+colors+tkinter+python&docid=608044344583851742&mid=EE1CBB6C69CD8E9958ADEE1CBB6C69CD8E9958AD&view=detail&FORM=VIRE
+
+Place objects in the middle:
+1. https://stackoverflow.com/questions/36594015/how-to-place-objects-in-the-middle-of-a-frame-using-tkinter
+
+Buttons:
+1. https://coderslegacy.com/python/python-gui/python-tkinter-button/#:~:text=%20%20%20%20No.%20%20%20,Default%20%20...%20%2014%20more%20rows%20
+2. https://www.tutorialspoint.com/python/tk_button.htm
+
+Combobox:
+1. https://anzeljg.github.io/rin2/book2/2405/docs/tkinter/ttk-Combobox.html
+
+Filedialog:
+1. https://coderslegacy.com/python/libraries-in-python/python-tkinter-filedialog/#:~:text=%20Python%20Tkinter%20filedialog%20%201%20FileDialog%20Options.,and%20askopenfilename%20%28s%29%20is%20that%20one...%20More%20
+
+Full tutorial to games:
+1. https://www.youtube.com/watch?v=whErCLh0-QU
+2. https://www.youtube.com/watch?v=mEkx5pRRhl8
+
+Canvas:
+1. https://www.tutorialspoint.com/python/tk_canvas.htm
+
+How to make dot with clicking:
+1. https://stackoverflow.com/questions/46975969/how-draw-a-dot-on-canvas-on-click-event-tkinter-python
+
+Oval objects:
+1. https://anzeljg.github.io/rin2/book2/2405/docs/tkinter/create_oval.html
+
+Labels:
+1. https://pythonguides.com/python-tkinter-label/

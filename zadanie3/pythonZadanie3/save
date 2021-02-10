@@ -1,0 +1,11 @@
+{
+      "bg_color": "chartreuse2",
+      "wolf_color": "tomato2",
+      "wolf_pos": "246.00513520069748, 92.64824416444776",
+      "sheep_color": "#ffffff",
+      "sheep_pos": [
+            "270.0, 69.0",
+            "117, 123",
+            "118, 205"
+      ]
+}

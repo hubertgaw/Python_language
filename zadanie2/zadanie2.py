@@ -147,7 +147,6 @@ def export_to_json(file_name, sheeps_list, directory):
         f.write(
             json.dumps(sheeps_list, indent=4))  # indent oznacza wciecia (aby wyswietlalo sie w pliku w ładny sposób)
 
-
 # funkcja eksportująca do csv
 def export_to_csv(file_name, round_no, sheeps_no, directory):
     logging.debug("export_to_csv(" + str(file_name) + str(round_no) + str(sheeps_no) + ") called")
